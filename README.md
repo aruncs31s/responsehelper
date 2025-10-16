@@ -8,12 +8,16 @@ This is a simple utility that helps to standardize api responses across the appl
 go get github.com/aruncs31s/responsehelper
 ``` 
 
+```go
+import "github.com/aruncs31s/responsehelper"
+``` 
+
 ### Usage
 I suggest you that you include this in your handler constructor like the following
 
 ```go
 type Handler struct {
-    responseHelper *responsehelper.ResponseHelper
+    responseHelper responsehelper.ResponseHelper
 }
 func NewHandler() *Handler {
     return &Handler{

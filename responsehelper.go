@@ -1,4 +1,4 @@
-package responses
+package responsehelper
 
 import (
 	"log"
