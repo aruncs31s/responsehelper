@@ -24,7 +24,7 @@ type ResponseHelper interface {
 	//
 	// Example Response Body:
 	// {
-	//	"status": false,
+	//	"success": false,
 	//	"error": {
 	//		"code":    400,
 	//		"status":  "BAD_REQUEST",
@@ -45,7 +45,7 @@ type ResponseHelper interface {
 	//
 	// Example Response Body:
 	// {
-	//	"status": false,
+	//	"success": false,
 	//	"error": {
 	//		"code":    404,
 	//		"status":  "NOT_FOUND",
@@ -65,7 +65,7 @@ type ResponseHelper interface {
 	//
 	// Example Response Body:
 	// {
-	//	"status": false,
+	//	"success": false,
 	//	"error": {
 	//		"code":    401,
 	//		"status":  "UNAUTHORIZED",
@@ -86,7 +86,7 @@ type ResponseHelper interface {
 	//
 	// Example Response Body:
 	// {
-	//	"status": false,
+	//	"success": false,
 	//	"error": {
 	//		"code":    500,
 	//		"status":  "INTERNAL_SERVER_ERROR",
@@ -107,7 +107,7 @@ type ResponseHelper interface {
 	//
 	// Example Response Body:
 	// {
-	//	"status": true,
+	//	"success": true,
 	//	"data": {
 	//		// response data here
 	//	},
@@ -127,7 +127,7 @@ type ResponseHelper interface {
 	//
 	// Example Response Body:
 	// {
-	//	"status": true,
+	//	"success": true,
 	//	"data": {
 	//		// response data here
 	//	},
@@ -151,7 +151,7 @@ type ResponseHelper interface {
 	//
 	// Example Response Body:
 	// {
-	//	"status": true,
+	//	"success": true,
 	//	"data": {
 	//		// response data here
 	//	},
@@ -170,7 +170,7 @@ type ResponseHelper interface {
 	//
 	// Example Response Body:
 	// {
-	//	"status": true,
+	//	"success": true,
 	//	"message": "qualification deleted successfully",
 	//	"meta": "2023-01-01T00:00:00Z"
 	// }
@@ -188,7 +188,7 @@ func NewResponseHelper() ResponseHelper {
 
 func (r *responseHelper) BadRequest(c *gin.Context, message string, details string) {
 	c.JSON(http.StatusBadRequest, gin.H{
-		"status": false,
+		"success": false,
 		"error": gin.H{
 			"code":    400,
 			"status":  "BAD_REQUEST",
@@ -200,7 +200,7 @@ func (r *responseHelper) BadRequest(c *gin.Context, message string, details stri
 
 func (r *responseHelper) NotFound(c *gin.Context, message string) {
 	c.JSON(http.StatusNotFound, gin.H{
-		"status": false,
+		"success": false,
 		"error": gin.H{
 			"code":    404,
 			"status":  "NOT_FOUND",
@@ -211,7 +211,7 @@ func (r *responseHelper) NotFound(c *gin.Context, message string) {
 
 func (r *responseHelper) Unauthorized(c *gin.Context, message string) {
 	c.JSON(http.StatusUnauthorized, gin.H{
-		"status": false,
+		"success": false,
 		"error": gin.H{
 			"code":    401,
 			"status":  "UNAUTHORIZED",
@@ -227,7 +227,7 @@ func (r *responseHelper) InternalError(c *gin.Context, message string, err error
 		1. There is a possibility of leaking information through error messages.
 	*/
 	c.JSON(http.StatusInternalServerError, gin.H{
-		"status": false,
+		"success": false,
 		"error": gin.H{
 			"code":    500,
 			"status":  "INTERNAL_SERVER_ERROR",
@@ -240,15 +240,15 @@ func (r *responseHelper) InternalError(c *gin.Context, message string, err error
 
 func (r *responseHelper) Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, gin.H{
-		"status": true,
-		"data":   data,
-		"meta":   time.Now().Format(time.RFC3339),
+		"success": true,
+		"data":    data,
+		"meta":    time.Now().Format(time.RFC3339),
 	})
 }
 
 func (r *responseHelper) SuccessWithPagination(c *gin.Context, data interface{}, meta interface{}) {
 	c.JSON(http.StatusOK, gin.H{
-		"status":     true,
+		"success":    true,
 		"data":       data,
 		"pagination": meta,
 	})
@@ -256,15 +256,15 @@ func (r *responseHelper) SuccessWithPagination(c *gin.Context, data interface{},
 
 func (r *responseHelper) Created(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusCreated, gin.H{
-		"status": true,
-		"data":   data,
-		"meta":   time.Now().Format(time.RFC3339),
+		"success": true,
+		"data":    data,
+		"meta":    time.Now().Format(time.RFC3339),
 	})
 }
 
 func (r *responseHelper) Deleted(c *gin.Context, message string) {
-	c.JSON(http.StatusNoContent, gin.H{
-		"status":  true,
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
 		"message": message + " deleted successfully",
 		"meta":    time.Now().Format(time.RFC3339),
 	})
