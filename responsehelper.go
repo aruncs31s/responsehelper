@@ -122,7 +122,25 @@ type ResponseHelper interface {
 	//	}
 	// }
 	Unauthorized(c *gin.Context, message string)
-
+	// Forbidden sends a 403 Forbidden response
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - message: A brief message describing the error.
+	//
+	// Example:
+	// h.responseHelper.Forbidden(c, "Forbidden access")
+	//
+	// Example Response Body:
+	// {
+	//	"success": false,
+	//	"error": {
+	//		"code":    403,
+	//		"status":  "FORBIDDEN",
+	//		"message": "This User does not have access to the resource"
+	//	}
+	// }
+	Forbidden(c *gin.Context, message string)
 	// InternalError sends a 500 Internal Server Error response
 	//
 	// Parameters:
@@ -332,5 +350,15 @@ func (r *responseHelper) Deleted(c *gin.Context, message string) {
 		"success": true,
 		"message": message + " deleted successfully",
 		"meta":    time.Now().Format(time.RFC3339),
+	})
+}
+func (r *responseHelper) Forbidden(c *gin.Context, message string) {
+	c.JSON(http.StatusForbidden, gin.H{
+		"success": false,
+		"error": gin.H{
+			"code":    403,
+			"status":  "FORBIDDEN",
+			"message": message,
+		},
 	})
 }
