@@ -69,3 +69,63 @@ func (h *userHandler) Login(c *gin.Context) {
 ## Features
 
 Comes with intellisense support for VSCode and other IDEs.
+
+### Available Response Methods
+
+#### `Success(c *gin.Context, data interface{})`
+Sends a 200 OK response with the provided data.
+
+#### `SuccessWithPagination(c *gin.Context, data interface{}, meta interface{})`
+Sends a 200 OK response with data and pagination metadata.
+
+#### `BadRequest(c *gin.Context, message string, details string)`
+Sends a 400 Bad Request response with custom error message and details.
+
+#### `Unauthorized(c *gin.Context, message string)`
+Sends a 401 Unauthorized response.
+
+#### `NotFound(c *gin.Context, message string)`
+Sends a 404 Not Found response.
+
+#### `Conflict(c *gin.Context, message string, err error)`
+Sends a 409 Conflict response for resource conflicts.
+
+```go
+h.responseHelper.Conflict(c, "Resource conflict", err)
+```
+
+Response:
+```json
+{
+    "success": false,
+    "error": {
+        "code": 409,
+        "status": "CONFLICT",
+        "message": "Resource conflict",
+        "details": "Error details here"
+    }
+}
+```
+
+#### `AlreadyExists(c *gin.Context, resource string, err error)`
+Sends a 409 Conflict response indicating that a resource already exists. This is a convenience method for the common case where a resource creation fails because the resource already exists.
+
+```go
+h.responseHelper.AlreadyExists(c, "User", err)
+```
+
+Response:
+```json
+{
+    "success": false,
+    "error": {
+        "code": 409,
+        "status": "CONFLICT",
+        "message": "User already exists",
+        "details": "Error details here"
+    }
+}
+```
+
+#### `InternalError(c *gin.Context, message string, err error)`
+Sends a 500 Internal Server Error response.
