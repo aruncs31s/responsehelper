@@ -290,6 +290,8 @@ func (r *responseHelper) AlreadyExists(c *gin.Context, resource string, err erro
 }
 
 func (r *responseHelper) Conflict(c *gin.Context, message string, err error) {
+	meta, _ := c.Get("meta")
+
 	c.JSON(http.StatusConflict, gin.H{
 		"success": false,
 		"error": gin.H{
@@ -298,6 +300,7 @@ func (r *responseHelper) Conflict(c *gin.Context, message string, err error) {
 			"message": message,
 			"details": err.Error(),
 		},
+		"meta": meta,
 	})
 }
 
