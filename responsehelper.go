@@ -3,6 +3,7 @@ package responsehelper
 /*
 Author: Arun CS
 Date: 2025-10-16
+Last Modified: 2025-11-07
 */
 
 import (
@@ -56,6 +57,49 @@ type ResponseHelper interface {
 	// }
 	BadRequest(c *gin.Context, message string, details string)
 
+	// AlreadyExists sends a 409 Conflict response indicating resource already exists
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - resource: The name of the resource that already exists.
+	//   - err: The error that occurred.
+	//
+	// Example:
+	//  responseHelper.AlreadyExists(c, "User", err)
+	//
+	// Example Response Body:
+	// {
+	//	"success": false,
+	//	"error": {
+	//		"code":    409,
+	//		"status":  "CONFLICT",
+	//		"message": "User already exists",
+	//		"details": "Error details here"
+	//	}
+	// }
+	AlreadyExists(c *gin.Context, resource string, err error)
+
+	// Conflict sends a 409 Conflict response
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - message: A brief message describing the error.
+	//   - err: The error that occurred.
+	//
+	// Example:
+	//  h.responseHelper.Conflict(c, "Resource conflict", err)
+	//
+	// Example Response Body:
+	// {
+	//	"success": false,
+	//	"error": {
+	//		"code":    409,
+	//		"status":  "CONFLICT",
+	//		"message": "Resource conflict",
+	//		"details": "Error details here"
+	//	}
+	// }
+	Conflict(c *gin.Context, message string, err error)
 	// NotFound sends a 404 Not Found response
 	//
 	// Parameters:
@@ -63,7 +107,7 @@ type ResponseHelper interface {
 	//   - message: A brief message describing the error.
 	//
 	// Example:
-	//  responseHelper.NotFound(c, "Resource not found")
+	//  h.responseHelper.NotFound(c, "Resource not found")
 	//
 	// Example Response Body:
 	// {
@@ -83,7 +127,7 @@ type ResponseHelper interface {
 	//   - message: A brief message describing the error.
 	//
 	// Example:
-	//  responseHelper.Unauthorized(c, "Unauthorized access")
+	// h.responseHelper.Unauthorized(c, "Unauthorized access")
 	//
 	// Example Response Body:
 	// {
@@ -95,7 +139,25 @@ type ResponseHelper interface {
 	//	}
 	// }
 	Unauthorized(c *gin.Context, message string)
-
+	// Forbidden sends a 403 Forbidden response
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - message: A brief message describing the error.
+	//
+	// Example:
+	// h.responseHelper.Forbidden(c, "Forbidden access")
+	//
+	// Example Response Body:
+	// {
+	//	"success": false,
+	//	"error": {
+	//		"code":    403,
+	//		"status":  "FORBIDDEN",
+	//		"message": "This User does not have access to the resource"
+	//	}
+	// }
+	Forbidden(c *gin.Context, message string)
 	// InternalError sends a 500 Internal Server Error response
 	//
 	// Parameters:
@@ -104,7 +166,7 @@ type ResponseHelper interface {
 	//   - err: The error that occurred.
 	//
 	// Example:
-	//  responseHelper.InternalError(c, "An unexpected error occurred", err)
+	//  h.responseHelper.InternalError(c, "An unexpected error occurred", err)
 	//
 	// Example Response Body:
 	// {
@@ -125,7 +187,7 @@ type ResponseHelper interface {
 	//   - data: The data to include in the response.
 	//
 	// Example:
-	//  responseHelper.Success(c, data)
+	//  h.responseHelper.Success(c, data)
 	//
 	// Example Response Body:
 	// {
@@ -145,7 +207,7 @@ type ResponseHelper interface {
 	//   - meta: The pagination metadata.
 	//
 	// Example:
-	//  responseHelper.SuccessWithPagination(c, data, meta)
+	//  h.responseHelper.SuccessWithPagination(c, data, meta)
 	//
 	// Example Response Body:
 	// {
@@ -220,6 +282,22 @@ func (r *responseHelper) BadRequest(c *gin.Context, message string, details stri
 			"details": details,
 		},
 		"meta": meta,
+	})
+}
+
+func (r *responseHelper) AlreadyExists(c *gin.Context, resource string, err error) {
+	r.Conflict(c, resource+" already exists", err)
+}
+
+func (r *responseHelper) Conflict(c *gin.Context, message string, err error) {
+	c.JSON(http.StatusConflict, gin.H{
+		"success": false,
+		"error": gin.H{
+			"code":    409,
+			"status":  "CONFLICT",
+			"message": message,
+			"details": err.Error(),
+		},
 	})
 }
 
@@ -302,5 +380,15 @@ func (r *responseHelper) Deleted(c *gin.Context, message string) {
 		"success": true,
 		"message": message + " deleted successfully",
 		"meta":    meta,
+	})
+}
+func (r *responseHelper) Forbidden(c *gin.Context, message string) {
+	c.JSON(http.StatusForbidden, gin.H{
+		"success": false,
+		"error": gin.H{
+			"code":    403,
+			"status":  "FORBIDDEN",
+			"message": message,
+		},
 	})
 }
