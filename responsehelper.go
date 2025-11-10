@@ -6,13 +6,30 @@ Date: 2025-10-16
 */
 
 import (
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+// Deprecated: This implementation is tightly coupled to Gin framework.
+// For new code, use the framework-agnostic Builder interface (builder.go)
+// or the Gin adapter (adapters/gin/gin_adapter.go) which provides the same
+// functionality with better separation of concerns.
+//
+// Migration example:
+//   Old way:
+//     helper := responsehelper.NewResponseHelper()
+//     helper.Success(c, data)
+//
+//   New way (Gin):
+//     adapter := ginadapter.NewAdapter()
+//     adapter.Success(c, data)
+//
+//   New way (framework-agnostic):
+//     builder := responsehelper.NewBuilder()
+//     response := builder.Success(data)
+//     c.JSON(200, response)
+//
 /*
 These are the possible responses from the API.
 */
@@ -192,6 +209,8 @@ func NewResponseHelper() ResponseHelper {
 }
 
 func (r *responseHelper) BadRequest(c *gin.Context, message string, details string) {
+
+	meta, _ := c.Get("meta")
 	c.JSON(http.StatusBadRequest, gin.H{
 		"success": false,
 		"error": gin.H{
@@ -200,10 +219,12 @@ func (r *responseHelper) BadRequest(c *gin.Context, message string, details stri
 			"message": message,
 			"details": details,
 		},
+		"meta": meta,
 	})
 }
 
 func (r *responseHelper) NotFound(c *gin.Context, message string) {
+	meta, _ := c.Get("meta")
 	c.JSON(http.StatusNotFound, gin.H{
 		"success": false,
 		"error": gin.H{
@@ -211,10 +232,12 @@ func (r *responseHelper) NotFound(c *gin.Context, message string) {
 			"status":  "NOT_FOUND",
 			"message": message,
 		},
+		"meta": meta,
 	})
 }
 
 func (r *responseHelper) Unauthorized(c *gin.Context, message string) {
+	meta, _ := c.Get("meta")
 	c.JSON(http.StatusUnauthorized, gin.H{
 		"success": false,
 		"error": gin.H{
@@ -222,11 +245,12 @@ func (r *responseHelper) Unauthorized(c *gin.Context, message string) {
 			"status":  "UNAUTHORIZED",
 			"message": message,
 		},
+		"meta": meta,
 	})
 }
 
 func (r *responseHelper) InternalError(c *gin.Context, message string, err error) {
-	log.Printf("Internal error: %v", err)
+	meta, _ := c.Get("meta")
 	// Check if sanitization of error is needed,
 	/*
 		1. There is a possibility of leaking information through error messages.
@@ -240,37 +264,43 @@ func (r *responseHelper) InternalError(c *gin.Context, message string, err error
 			"details": err.Error(), // sanitizing this in production
 		},
 		"data": nil,
+		"meta": meta,
 	})
 }
 
 func (r *responseHelper) Success(c *gin.Context, data interface{}) {
+	meta, _ := c.Get("meta")
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    data,
-		"meta":    time.Now().Format(time.RFC3339),
+		"meta":    meta,
 	})
 }
 
-func (r *responseHelper) SuccessWithPagination(c *gin.Context, data interface{}, meta interface{}) {
+func (r *responseHelper) SuccessWithPagination(c *gin.Context, data interface{}, paginationMeta interface{}) {
+	meta, _ := c.Get("meta")
 	c.JSON(http.StatusOK, gin.H{
 		"success":    true,
 		"data":       data,
-		"pagination": meta,
+		"pagination": paginationMeta,
+		"meta":       meta,
 	})
 }
 
 func (r *responseHelper) Created(c *gin.Context, data interface{}) {
+	meta, _ := c.Get("meta")
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"data":    data,
-		"meta":    time.Now().Format(time.RFC3339),
+		"meta":    meta,
 	})
 }
 
 func (r *responseHelper) Deleted(c *gin.Context, message string) {
+	meta, _ := c.Get("meta")
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": message + " deleted successfully",
-		"meta":    time.Now().Format(time.RFC3339),
+		"meta":    meta,
 	})
 }
