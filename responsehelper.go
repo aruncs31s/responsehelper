@@ -259,6 +259,22 @@ type ResponseHelper interface {
 	//	"meta": "2023-01-01T00:00:00Z"
 	// }
 	Deleted(c *gin.Context, message string)
+
+	// NoContent sends a 204 No Content response
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//
+	// Example:
+	//  responseHelper.NoContent(c)
+	//
+	// Example Response Body:
+	// {
+	//	"success": true,
+	//	"data":    null,
+	//	"meta":    "2023-01-01T00:00:00Z"
+	// }
+	NoContent(c *gin.Context)
 }
 
 // Response helper - centralizes response logic
@@ -386,6 +402,7 @@ func (r *responseHelper) Deleted(c *gin.Context, message string) {
 	})
 }
 func (r *responseHelper) Forbidden(c *gin.Context, message string) {
+	meta, _ := c.Get("meta")
 	c.JSON(http.StatusForbidden, gin.H{
 		"success": false,
 		"error": gin.H{
@@ -393,5 +410,15 @@ func (r *responseHelper) Forbidden(c *gin.Context, message string) {
 			"status":  "FORBIDDEN",
 			"message": message,
 		},
+		"meta": meta,
+	})
+}
+
+func (r *responseHelper) NoContent(c *gin.Context) {
+	meta, _ := c.Get("meta")
+	c.JSON(http.StatusNoContent, gin.H{
+		"success": true,
+		"data":    nil,
+		"meta":    meta,
 	})
 }
