@@ -1,6 +1,6 @@
 module github.com/aruncs31s/responsehelper
 
-go 1.25.2
+go 1.25.0
 
 require (
 	github.com/bytedance/sonic v1.14.0 // indirect
