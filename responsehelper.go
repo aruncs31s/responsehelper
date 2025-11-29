@@ -12,28 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Deprecated: This implementation is tightly coupled to Gin framework.
-// For new code, use the framework-agnostic Builder interface (builder.go)
-// or the Gin adapter (adapters/gin/gin_adapter.go) which provides the same
-// functionality with better separation of concerns.
-//
-// Migration example:
-//   Old way:
-//     helper := responsehelper.NewResponseHelper()
-//     helper.Success(c, data)
-//
-//   New way (Gin):
-//     adapter := ginadapter.NewAdapter()
-//     adapter.Success(c, data)
-//
-//   New way (framework-agnostic):
-//     builder := responsehelper.NewBuilder()
-//     response := builder.Success(data)
-//     c.JSON(200, response)
-//
-/*
-These are the possible responses from the API.
-*/
 type ResponseHelper interface {
 	// BadRequest sends a 400 Bad Request response
 	//
