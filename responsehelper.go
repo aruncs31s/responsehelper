@@ -398,6 +398,8 @@ type ResponseHelper interface {
 	//	"meta": "2023-01-01T00:00:00Z"
 	// }
 	FilterDropdown(c *gin.Context, filters []FilterDropdown, sorts ...any)
+	// TODO: Document
+	SuccessList(c *gin.Context, data interface{})
 }
 
 // Response helper - centralizes response logic
@@ -552,6 +554,7 @@ type ListResponse struct {
 	Meta       interface{} `json:"meta,omitempty"`
 	TotalCount int         `json:"total_count,omitempty"`
 	Message    string      `json:"message,omitempty"`
+	ReqUI      string      `json:"req_id,omitempty"`
 }
 
 func (r *responseHelper) List(
@@ -565,6 +568,7 @@ func (r *responseHelper) List(
 		Success: true,
 		List:    data,
 		Meta:    meta,
+		ReqUI:   c.GetString("req_id"),
 	}
 
 	if len(totalCount) > 0 {
@@ -644,4 +648,11 @@ func (r *responseHelper) FilterDropdown(c *gin.Context, filters []FilterDropdown
 		"available_sorts":   sorts,
 		"meta":              meta,
 	})
+}
+func (r *responseHelper) SuccessList(c *gin.Context, data interface{}) {
+	r.List(
+		c,
+		data,
+	)
+
 }
