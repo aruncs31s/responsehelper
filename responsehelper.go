@@ -305,13 +305,99 @@ type ResponseHelper interface {
 	//	"meta":    "2023-01-01T00:00:00Z"
 	// }
 	NoContent(c *gin.Context)
+
+	// SendDoc sends a 200 OK response with a file attachment
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - contentType: The MIME type of the document (e.g. "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").
+	//   - filename: The name of the file to be sent as an attachment.
+	//   - documentBytes: The raw bytes of the document to send.
+	//
+	// Example:
+	//  responseHelper.SendDoc(c, "application/pdf", "report.pdf", pdfBytes)
+	//
+	// Example Response Headers:
+	// Content-Type: application/pdf
+	// Content-Disposition: attachment; filename=report.pdf
+	// Content-Length: <byte length>
 	SendDoc(
 		c *gin.Context,
 		contentType string,
 		filename string,
 		documentBytes []byte,
 	)
+
+	// Ok sends a 200 OK response with a request ID and data
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - data: The data to include in the response.
+	//
+	// Example:
+	//  responseHelper.Ok(c, data)
+	//
+	// Example Response Body:
+	// {
+	//	"req_id":  "abc123",
+	//	"success": true,
+	//	"data": {
+	//		// response data here
+	//	},
+	//	"meta": "2023-01-01T00:00:00Z"
+	// }
 	Ok(c *gin.Context, data interface{})
+
+	// Filters sends a 200 OK response with available filter and sort options
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - filters: The available filter options to include in the response.
+	//   - sort: Optional variadic sort options to include in the response.
+	//
+	// Example:
+	//  responseHelper.Filters(c, availableFilters, sortOptions)
+	//
+	// Example Response Body:
+	// {
+	//	"success": true,
+	//	"available_filters": {
+	//		// filter options here
+	//	},
+	//	"available_sort": [
+	//		// sort options here
+	//	],
+	//	"meta": "2023-01-01T00:00:00Z"
+	// }
+	Filters(
+		c *gin.Context,
+		filters any,
+		sort ...any,
+	)
+
+	// FilterDropdown sends a 200 OK response with structured dropdown filter and sort options
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - filters: A slice of FilterDropdown items, each with an ID, Name, and optional ParentID.
+	//   - sorts: Optional variadic sort options to include in the response.
+	//
+	// Example:
+	//  responseHelper.FilterDropdown(c, []responseHelper.FilterDropdown{{ID: 1, Name: "Active"}}, sortOptions)
+	//
+	// Example Response Body:
+	// {
+	//	"success": true,
+	//	"available_filters": [
+	//		{"id": 1, "name": "Active"},
+	//		{"id": 2, "name": "Inactive", "parent_id": 1}
+	//	],
+	//	"available_sorts": [
+	//		// sort options here
+	//	],
+	//	"meta": "2023-01-01T00:00:00Z"
+	// }
+	FilterDropdown(c *gin.Context, filters []FilterDropdown, sorts ...any)
 }
 
 // Response helper - centralizes response logic
@@ -505,7 +591,6 @@ func (r *responseHelper) ListWithMessage(
 	})
 }
 
-// TODO: Document
 func (r *responseHelper) SendDoc(
 	c *gin.Context,
 	contentType string,
@@ -526,5 +611,37 @@ func (r *responseHelper) Ok(c *gin.Context, data interface{}) {
 		"success": true,
 		"data":    data,
 		"meta":    meta,
+	})
+}
+
+type FilterDropdown struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	ParentID int    `json:"parent_id,omitempty"`
+}
+
+func (r *responseHelper) Filters(
+	c *gin.Context,
+	filters any,
+	sort ...any,
+) {
+	meta, _ := c.Get("meta")
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":           true,
+		"available_filters": filters,
+		"available_sorts":   sort,
+		"meta":              meta,
+	})
+}
+
+func (r *responseHelper) FilterDropdown(c *gin.Context, filters []FilterDropdown, sorts ...any) {
+	meta, _ := c.Get("meta")
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":           true,
+		"available_filters": filters,
+		"available_sorts":   sorts,
+		"meta":              meta,
 	})
 }
