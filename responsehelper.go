@@ -176,7 +176,58 @@ type ResponseHelper interface {
 	//	"meta": "2023-01-01T00:00:00Z"
 	// }
 	Success(c *gin.Context, data interface{})
+	// List sends a 200 OK response with a list of resources and an optional total count
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - data: The list data to include in the response.
+	//   - totalCount: An optional total count of resources (variadic, first element used).
+	//
+	// Example:
+	//  responseHelper.List(c, users, 42)
+	//
+	// Example Response Body:
+	// {
+	//	"success": true,
+	//	"list": [
+	//		// response data here
+	//	],
+	//	"meta": "2023-01-01T00:00:00Z",
+	//	"total_count": 42
+	// }
+	List(
+		c *gin.Context,
+		data interface{},
+		totalCount ...int,
+	)
 
+	// ListWithMessage sends a 200 OK response with a list of resources, a count, and a message
+	//
+	// Parameters:
+	//   - c: The Gin context to send the response to.
+	//   - data: The list data to include in the response.
+	//   - count: The total count of resources.
+	//   - message: A brief message to include in the response.
+	//
+	// Example:
+	//  responseHelper.ListWithMessage(c, users, 42, "Users retrieved successfully")
+	//
+	// Example Response Body:
+	// {
+	//	"success": true,
+	//	"list": [
+	//		// response data here
+	//	],
+	//	"meta": "2023-01-01T00:00:00Z",
+	//	"total_count": 42,
+	//	"message": "Users retrieved successfully"
+	// }
+	ListWithMessage(
+		c *gin.Context,
+		data interface{},
+		count int,
+		message string,
+	)
 	// SuccessWithPagination sends a 200 OK response with pagination metadata
 	//
 	// Parameters:
@@ -398,5 +449,50 @@ func (r *responseHelper) NoContent(c *gin.Context) {
 		"success": true,
 		"data":    nil,
 		"meta":    meta,
+	})
+}
+
+type ListResponse struct {
+	Success    bool        `json:"success"`
+	List       interface{} `json:"list"`
+	Meta       interface{} `json:"meta,omitempty"`
+	TotalCount int         `json:"total_count,omitempty"`
+	Message    string      `json:"message,omitempty"`
+}
+
+func (r *responseHelper) List(
+	c *gin.Context,
+	data interface{},
+	totalCount ...int,
+) {
+	meta, _ := c.Get("meta")
+
+	resp := ListResponse{
+		Success: true,
+		List:    data,
+		Meta:    meta,
+	}
+
+	if len(totalCount) > 0 {
+		resp.TotalCount = totalCount[0]
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+func (r *responseHelper) ListWithMessage(
+	c *gin.Context,
+	data interface{},
+	count int,
+	message string,
+) {
+	meta, _ := c.Get("meta")
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":     true,
+		"list":        data,
+		"meta":        meta,
+		"total_count": count,
+		"message":     message,
 	})
 }
