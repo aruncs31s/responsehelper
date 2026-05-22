@@ -7,6 +7,7 @@ Last Modified: 2025-11-07
 */
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -304,6 +305,13 @@ type ResponseHelper interface {
 	//	"meta":    "2023-01-01T00:00:00Z"
 	// }
 	NoContent(c *gin.Context)
+	SendDoc(
+		c *gin.Context,
+		contentType string,
+		filename string,
+		documentBytes []byte,
+	)
+	Ok(c *gin.Context, data interface{})
 }
 
 // Response helper - centralizes response logic
@@ -494,5 +502,29 @@ func (r *responseHelper) ListWithMessage(
 		"meta":        meta,
 		"total_count": count,
 		"message":     message,
+	})
+}
+
+// TODO: Document
+func (r *responseHelper) SendDoc(
+	c *gin.Context,
+	contentType string,
+	filename string,
+	documentBytes []byte,
+) {
+	c.Header("Content-Type", contentType)
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Content-Length", fmt.Sprintf("%d", len(documentBytes)))
+
+	// Send file
+	c.Data(http.StatusOK, contentType, documentBytes)
+}
+func (r *responseHelper) Ok(c *gin.Context, data interface{}) {
+	meta, _ := c.Get("meta")
+	c.JSON(http.StatusOK, gin.H{
+		"req_id":  c.GetString("req_id"),
+		"success": true,
+		"data":    data,
+		"meta":    meta,
 	})
 }
