@@ -177,52 +177,6 @@ type ResponseHelper interface {
 	//	"meta": "2023-01-01T00:00:00Z"
 	// }
 	Success(c *gin.Context, data interface{})
-	// List sends a 200 OK response with a list of resources and an optional total count
-	//
-	// Parameters:
-	//   - c: The Gin context to send the response to.
-	//   - data: The list data to include in the response.
-	//   - totalCount: An optional total count of resources (variadic, first element used).
-	//
-	// Example:
-	//  responseHelper.List(c, users, 42)
-	//
-	// Example Response Body:
-	// {
-	//	"success": true,
-	//	"list": [
-	//		// response data here
-	//	],
-	//	"meta": "2023-01-01T00:00:00Z",
-	//	"total_count": 42
-	// }
-
-	// SuccessWithPagination sends a 200 OK response with pagination metadata
-	//
-	// Parameters:
-	//   - c: The Gin context to send the response to.
-	//   - data: The data to include in the response.
-	//   - meta: The pagination metadata.
-	//
-	// Example:
-	//  h.responseHelper.SuccessWithPagination(c, data, meta)
-	//
-	// Example Response Body:
-	// {
-	//	"success": true,
-	//	"data": {
-	//		// response data here
-	//	},
-	//	"pagination": {
-	//		"currentPage": 3,
-	//		"pageSize": 10,
-	//		"totalPages": 3,
-	//		"totalRecords": 27
-	//	}
-	// }
-	SuccessWithPagination(c *gin.Context, data interface{}, meta interface{})
-
-
 	List(
 		c *gin.Context,
 		data interface{},
@@ -682,15 +636,4 @@ func (r *responseHelper) SuccessList(c *gin.Context, data interface{}) {
 		data,
 	)
 
-}
-func (r *responseHelper) SuccessListWithPagination(c *gin.Context, data interface{}, paginationMeta int) {
-	meta, _ := c.Get("meta")
-
-	c.JSON(http.StatusOK, gin.H{
-		"req_id":      c.GetString("req_id"),
-		"success":     true,
-		"list":        data,
-		"total_count": paginationMeta,
-		"meta":        meta,
-	})
 }
