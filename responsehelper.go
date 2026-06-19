@@ -235,6 +235,8 @@ type ResponseHelper interface {
 	// }
 	SuccessWithPagination(c *gin.Context, data interface{}, meta interface{})
 
+	// Extended version of the [Success] method that includes a custom message in the response
+	SuccessWithMessage(c *gin.Context, data interface{}, message string)
 	// Created sends a 201 Created response
 	//
 	// Parameters:
@@ -393,7 +395,6 @@ func NewResponseHelper() ResponseHelper {
 }
 
 func (r *responseHelper) BadRequest(c *gin.Context, message string, details string) {
-
 	meta, _ := c.Get("meta")
 	c.JSON(http.StatusBadRequest, gin.H{
 		"success": false,
@@ -507,6 +508,7 @@ func (r *responseHelper) Deleted(c *gin.Context, message string) {
 		"meta":    meta,
 	})
 }
+
 func (r *responseHelper) Forbidden(c *gin.Context, message string) {
 	meta, _ := c.Get("meta")
 	c.JSON(http.StatusForbidden, gin.H{
@@ -589,6 +591,7 @@ func (r *responseHelper) SendDoc(
 	// Send file
 	c.Data(http.StatusOK, contentType, documentBytes)
 }
+
 func (r *responseHelper) Ok(c *gin.Context, data interface{}) {
 	meta, _ := c.Get("meta")
 	c.JSON(http.StatusOK, gin.H{
@@ -630,10 +633,21 @@ func (r *responseHelper) FilterDropdown(c *gin.Context, filters []FilterDropdown
 		"meta":              meta,
 	})
 }
+
 func (r *responseHelper) SuccessList(c *gin.Context, data interface{}) {
 	r.List(
 		c,
 		data,
 	)
+}
 
+func (r *responseHelper) SuccessWithMessage(c *gin.Context, data interface{}, message string) {
+	meta, _ := c.Get("meta")
+	c.JSON(http.StatusOK, gin.H{
+		"req_id":  c.GetString("req_id"),
+		"success": true,
+		"data":    data,
+		"message": message,
+		"meta":    meta,
+	})
 }
