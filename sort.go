@@ -15,3 +15,10 @@ func Sort[T WithName](in []T) []T {
 	})
 	return in
 }
+
+func SortDesc[T WithName](in []T) []T {
+	slices.SortFunc(in, func(a, b T) int {
+		return strings.Compare(b.String(), a.String())
+	})
+	return in
+}
