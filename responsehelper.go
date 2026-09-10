@@ -709,6 +709,10 @@ func (r *responseHelper) SuccessWithMessage(c *gin.Context, data interface{}, me
 
 func getReqIDAndMeta(c *gin.Context) ([]zap.Field, string, any) {
 	reqID := c.GetString("req_id")
+	// Try Fallback
+	if reqID == "" {
+		reqID = c.GetString("request_id")
+	}
 	fields := []zap.Field{}
 	if reqID != "" {
 		fields = append(fields, zap.String("req_id", reqID))
