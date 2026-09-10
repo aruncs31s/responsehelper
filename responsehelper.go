@@ -11,7 +11,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aruncs31s/gologger"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type ResponseHelper interface {
@@ -396,16 +398,20 @@ func NewResponseHelper() ResponseHelper {
 }
 
 func (r *responseHelper) BadRequest(c *gin.Context, message string, details string) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	fields = append(fields, zap.String("message", message))
+	fields = append(fields, zap.String("details", details))
+	gologger.Warn("BAD_REQUEST", fields...)
 	c.JSON(http.StatusBadRequest, gin.H{
 		"success": false,
 		"error": gin.H{
-			"code":    400,
+			"code":    http.StatusBadRequest,
 			"status":  "BAD_REQUEST",
 			"message": message,
 			"details": details,
 		},
-		"meta": meta,
+		"meta":   meta,
+		"req_id": reqID,
 	})
 }
 
@@ -414,117 +420,149 @@ func (r *responseHelper) AlreadyExists(c *gin.Context, resource string, err erro
 }
 
 func (r *responseHelper) Conflict(c *gin.Context, message string, err error) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	fields = append(fields, zap.String("message", message))
+	fields = append(fields, zap.Error(err))
+	gologger.Warn("CONFLICT", fields...)
 
 	c.JSON(http.StatusConflict, gin.H{
 		"success": false,
 		"error": gin.H{
-			"code":    409,
+			"code":    http.StatusConflict,
 			"status":  "CONFLICT",
 			"message": message,
 			"details": err.Error(),
 		},
-		"meta": meta,
+		"meta":   meta,
+		"req_id": reqID,
 	})
 }
 
 func (r *responseHelper) NotFound(c *gin.Context, message string) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	fields = append(fields, zap.String("message", message))
+	gologger.Warn("NOT_FOUND", fields...)
+
 	c.JSON(http.StatusNotFound, gin.H{
 		"success": false,
 		"error": gin.H{
-			"code":    404,
+			"code":    http.StatusNotFound,
 			"status":  "NOT_FOUND",
 			"message": message,
 		},
-		"meta": meta,
+		"meta":   meta,
+		"req_id": reqID,
 	})
 }
 
 func (r *responseHelper) Unauthorized(c *gin.Context, message string) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	fields = append(fields, zap.String("message", message))
+	gologger.Warn("UNAUTHORIZED", fields...)
 	c.JSON(http.StatusUnauthorized, gin.H{
 		"success": false,
 		"error": gin.H{
-			"code":    401,
+			"code":    http.StatusUnauthorized,
 			"status":  "UNAUTHORIZED",
 			"message": message,
 		},
-		"meta": meta,
+		"meta":   meta,
+		"req_id": reqID,
 	})
 }
 
 func (r *responseHelper) InternalError(c *gin.Context, message string, err error) {
-	meta, _ := c.Get("meta")
 	// Check if sanitization of error is needed,
 	/*
 		1. There is a possibility of leaking information through error messages.
 	*/
+
+	fields, reqID, meta := getReqIDAndMeta(c)
+	fields = append(fields, zap.String("message", message))
+	fields = append(fields, zap.Error(err))
+	gologger.Error("INTERNAL_SERVER_ERROR", fields...)
+
 	c.JSON(http.StatusInternalServerError, gin.H{
 		"success": false,
 		"error": gin.H{
-			"code":    500,
+			"code":    http.StatusInternalServerError,
 			"status":  "INTERNAL_SERVER_ERROR",
 			"message": message,
 			"details": err.Error(), // sanitizing this in production
 		},
-		"data": nil,
-		"meta": meta,
+		"data":   nil,
+		"meta":   meta,
+		"req_id": reqID,
 	})
 }
 
 func (r *responseHelper) Success(c *gin.Context, data interface{}) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    data,
 		"meta":    meta,
+		"req_id":  reqID,
 	})
 }
 
 func (r *responseHelper) SuccessWithPagination(c *gin.Context, data interface{}, paginationMeta interface{}) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
+
 	c.JSON(http.StatusOK, gin.H{
 		"success":    true,
 		"data":       data,
 		"pagination": paginationMeta,
 		"meta":       meta,
+		"req_id":     reqID,
 	})
 }
 
 func (r *responseHelper) Created(c *gin.Context, data interface{}) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"data":    data,
 		"meta":    meta,
+		"req_id":  reqID,
 	})
 }
 
 func (r *responseHelper) Deleted(c *gin.Context, message string) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	fields = append(fields, zap.String("message", message))
+	gologger.Info("SUCCESS", fields...)
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": message + " deleted successfully",
 		"meta":    meta,
+		"req_id":  reqID,
 	})
 }
 
 func (r *responseHelper) Forbidden(c *gin.Context, message string) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	fields = append(fields, zap.String("message", message))
+	gologger.Warn("FORBIDDEN", fields...)
 	c.JSON(http.StatusForbidden, gin.H{
 		"success": false,
 		"error": gin.H{
-			"code":    403,
+			"code":    http.StatusForbidden,
 			"status":  "FORBIDDEN",
 			"message": message,
 		},
-		"meta": meta,
+		"meta":   meta,
+		"req_id": reqID,
 	})
 }
 
 func (r *responseHelper) NoContent(c *gin.Context) {
-	meta, _ := c.Get("meta")
+	fields, _, meta := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
 	c.JSON(http.StatusNoContent, gin.H{
 		"success": true,
 		"data":    nil,
@@ -546,13 +584,15 @@ func (r *responseHelper) List(
 	data interface{},
 	totalCount ...int,
 ) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
 
 	resp := ListResponse{
 		Success: true,
 		List:    data,
 		Meta:    meta,
-		ReqUI:   c.GetString("req_id"),
+		// Forgive me :)
+		ReqUI: reqID,
 	}
 
 	if len(totalCount) > 0 {
@@ -568,7 +608,10 @@ func (r *responseHelper) ListWithMessage(
 	count int,
 	message string,
 ) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	fields = append(fields, zap.String("message", message))
+	fields = append(fields, zap.Int("total_count", count))
+	gologger.Info("SUCCESS", fields...)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success":     true,
@@ -576,6 +619,7 @@ func (r *responseHelper) ListWithMessage(
 		"meta":        meta,
 		"total_count": count,
 		"message":     message,
+		"req_id":      reqID,
 	})
 }
 
@@ -594,9 +638,11 @@ func (r *responseHelper) SendDoc(
 }
 
 func (r *responseHelper) Ok(c *gin.Context, data interface{}) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
+
 	c.JSON(http.StatusOK, gin.H{
-		"req_id":  c.GetString("req_id"),
+		"req_id":  reqID,
 		"success": true,
 		"data":    data,
 		"meta":    meta,
@@ -614,7 +660,8 @@ func (r *responseHelper) Filters(
 	filters any,
 	sort ...any,
 ) {
-	meta, _ := c.Get("meta")
+	fields, _, meta := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success":           true,
@@ -625,7 +672,8 @@ func (r *responseHelper) Filters(
 }
 
 func (r *responseHelper) FilterDropdown(c *gin.Context, filters []FilterDropdown, sorts ...any) {
-	meta, _ := c.Get("meta")
+	fields, _, meta := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success":           true,
@@ -636,6 +684,9 @@ func (r *responseHelper) FilterDropdown(c *gin.Context, filters []FilterDropdown
 }
 
 func (r *responseHelper) SuccessList(c *gin.Context, data interface{}) {
+	fields, _, _ := getReqIDAndMeta(c)
+	gologger.Info("SUCCESS", fields...)
+
 	r.List(
 		c,
 		data,
@@ -643,12 +694,29 @@ func (r *responseHelper) SuccessList(c *gin.Context, data interface{}) {
 }
 
 func (r *responseHelper) SuccessWithMessage(c *gin.Context, data interface{}, message string) {
-	meta, _ := c.Get("meta")
+	fields, reqID, meta := getReqIDAndMeta(c)
+
+	fields = append(fields, zap.String("message", message))
+	gologger.Info("SUCCESS", fields...)
 	c.JSON(http.StatusOK, gin.H{
-		"req_id":  c.GetString("req_id"),
+		"req_id":  reqID,
 		"success": true,
 		"data":    data,
 		"message": message,
 		"meta":    meta,
 	})
+}
+
+func getReqIDAndMeta(c *gin.Context) ([]zap.Field, string, any) {
+	reqID := c.GetString("req_id")
+	fields := []zap.Field{}
+	if reqID != "" {
+		fields = append(fields, zap.String("req_id", reqID))
+	}
+
+	meta, exists := c.Get("meta")
+	if exists {
+		fields = append(fields, zap.Any("meta", meta))
+	}
+	return fields, reqID, meta
 }
